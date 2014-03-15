@@ -33,15 +33,15 @@ def battle_Readiness_Init(Participants):
     """
     Creates a list of list-pairs of particpants and their readiness, with their readiness taking default values.
     """
-    party_names = []
-    for entry in test_allies:
-        party_names.append(entry['name'])
-    enemy_names = []
-    for entry in test_enemies:
-        enemy_names.append(entry['name'])
+    party_names = [entry['name'] for entry in test_allies]
+    # for entry in test_allies:
+    #     party_names.append(entry['name'])
+    enemy_names = [entry['name'] for entry in test_enemies]
+    # for entry in test_enemies:
+    #     enemy_names.append(entry['name'])
 
-    print "Party:", party_names#Need to expand this latter
-    print "Enemies:", enemy_names 
+    print "Party:", party_names  # Need to expand this latter
+    print "Enemies:", enemy_names
     for entry in Participants:
         global_participant_readiness.append([entry, [1000, 'b']])
     return global_participant_readiness
@@ -79,9 +79,10 @@ def status_screen():
         if len(entry[0]['name']) > char_max:
             char_max = len(entry[0]['name'])
         if len(str(entry[0]['HP'])) > char_max:
-            char_max = len(str(entry[0]['HP'])) 
+            char_max = len(str(entry[0]['HP']))
     print string_space_adder(names_list_maxed, char_max)
     print string_space_adder(HP_list_maxed, char_max)
+
 
 def string_space_adder(list, char_max):
     new_list = []
