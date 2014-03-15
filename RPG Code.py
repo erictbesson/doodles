@@ -175,7 +175,7 @@ def player_turn(party_member):
     """
     made_a_choice = False
     while made_a_choice == False:
-        action_choice = int(raw_input('What will you do? \n 1: Attack \n 2: Wait'))
+        action_choice = int(raw_input('What will you do? \n 1: Attack \n 2: Wait \n'))
         if action_choice == 1:
             enemies_string = 'Whom will you attack?'
             i = 1
@@ -183,7 +183,7 @@ def player_turn(party_member):
                 enemies_string = enemies_string+"\n "+str(i)+":"+entry['name']
                 i +=1
             enemies_string = enemies_string+"\n "+str(i)+": cancel"
-            target_choice_value = int(raw_input(enemies_string))
+            target_choice_value = int(raw_input(enemies_string + '\n'))
             if target_choice_value > i-1:
                 made_a_choice = False
             else:
