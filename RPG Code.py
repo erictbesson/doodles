@@ -259,7 +259,10 @@ def attack_ally(target_name, agent_name):
     """
     Code for a basic attack against an ally.
     """
-    target_of_attack = party_member_name_to_dict_value(target_name)
+    if type(target_name) == str:
+        target_of_attack = party_member_name_to_dict_value(target_name)
+    else:
+        target_of_attack = target_name
     damage_dealt = enemy_name_to_dict_value(agent_name)['atk']
     print agent_name, "attacks", target_name, ", dealing", damage_dealt, "damage."
     target_of_attack['HP'] = target_of_attack['HP']-damage_dealt
@@ -272,8 +275,7 @@ def bee_turn():
     Bee does something.
     Returns the Bee's name
     """
-    target_ally = test_allies[random.randint(0,len(test_allies)-1)]
-    attack_ally(target_ally['name'], 'Bee')
+    basic_attack_by_enemy('Bee')
     return Bee['name']
 
 
@@ -282,9 +284,15 @@ def slime_turn():
     Slime does something.
     Returns the slime's name
     """
-    target_ally = test_allies[random.randint(0,len(test_allies)-1)]
-    attack_ally(target_ally, 'Slime')
+    basic_attack_by_enemy('Slime')
     return Slime['name']
+
+
+
+def basic_attack_by_enemy(agent_name):
+    target_ally = test_allies[random.randint(0,len(test_allies)-1)]
+    attack_ally(target_ally, agent_name)
+
 
 battle_Readiness_Init(test_Participants)
 battle_run(test_allies, test_enemies)
