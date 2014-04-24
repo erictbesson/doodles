@@ -13,6 +13,67 @@ Bee = {'name': 'Bee', 'speed': 20, 'HP':10, 'atk':5}
 #   speed
 
 
+class Participant:
+	"""
+	Base Class for enemy participants and party members.  Need another class which tokenizes the enemy participants.
+	"""
+	def __init__(self, name, speed=10, hp=100, atk=10):
+		self.name = name
+		self.speed = speed
+		self.hp = hp
+		self.atk = atk
+
+
+class Ally_Participant(Participant):
+	"""
+	Derived Class for allies
+	"""
+	def ally_attack_enemy(self, target_choice):
+
+		"""
+		Code for a basic attack against an enemy.
+		"""
+		damage_dealt = self.atk #to be adjusted by a real formula later
+		print self.name, "attacks", target_choice.name, ", dealing", damage_dealt, "damage."
+		target_choice.hp = target_choice.hp - damage_dealt
+		if target_choice.hp <= 0:
+			enemy_is_defeated(target_choice.name)
+
+
+class Enemy_Participant(Participant):
+	"""
+	Derived Class for enemies
+	"""	
+
+	
+	def enemy_attack_ally(self, target_choice):
+    """
+    Code for a basic attack against an ally.
+    """
+		damage_dealt = self.atk #to be adjusted by a real formula later
+		print self.name, "attacks", target_choice.name, ", dealing", damage_dealt, "damage."
+		target_choice.hp = target_choice.hp - damage_dealt
+		if target_choice.hp <= 0:
+			party_member_is_defeated(target_choice.name)
+	
+	def random_ally_target(self):
+   		return test_allies[random.randint(0,len(test_allies)-1)]
+
+   	def basic_attack(self):
+   		enemy_attack_ally(self, random_ally_target)
+
+
+
+
+
+
+
+
+
+kiro = Ally_Participant('Kiro', 10, 100, 10)
+slime = Participant('Slime', 5, 20, 10)
+bee = Participant('Bee', 20, 10, 5)
+
 
 test_Participants = [Kiro, Slime, Bee]
 
@@ -45,6 +106,9 @@ def battle_Readiness_Init(Participants):
     for entry in Participants:
         global_participant_readiness.append([entry, [1000, 'b']])
     return global_participant_readiness
+
+
+
 
 
 def finish_list_2nd_element(p):
@@ -264,7 +328,7 @@ def attack_ally(target_name, agent_name):
     else:
         target_of_attack = target_name
     damage_dealt = enemy_name_to_dict_value(agent_name)['atk']
-    print agent_name, "attacks", target_name, ", dealing", damage_dealt, "damage."
+    print agent_name, "attacks", target_name['name'], ", dealing", damage_dealt, "damage."
     target_of_attack['HP'] = target_of_attack['HP']-damage_dealt
     if target_of_attack['HP'] <= 0:
         party_member_is_defeated(target_name)
