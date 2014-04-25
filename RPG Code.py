@@ -47,20 +47,22 @@ class Enemy_Participant(Participant):
 
 	
 	def enemy_attack_ally(self, target_choice):
-    """
-    Code for a basic attack against an ally.
-    """
-		damage_dealt = self.atk #to be adjusted by a real formula later
-		print self.name, "attacks", target_choice.name, ", dealing", damage_dealt, "damage."
+
+		"""
+		Code for a basic attack against an ally.
+		"""
+		
+		damage_dealt = self.atk
+		print self.name, 'attacks', target_choice.name, ", dealing", damage_dealt, "damage."
 		target_choice.hp = target_choice.hp - damage_dealt
 		if target_choice.hp <= 0:
 			party_member_is_defeated(target_choice.name)
 	
 	def random_ally_target(self):
-   		return test_allies[random.randint(0,len(test_allies)-1)]
+		return test_allies[random.randint(0,len(test_allies)-1)]
 
-   	def basic_attack(self):
-   		enemy_attack_ally(self, random_ally_target)
+	def basic_attack(self):
+		enemy_attack_ally(self, random_ally_target)
 
 
 
@@ -71,14 +73,18 @@ class Enemy_Participant(Participant):
 
 
 kiro = Ally_Participant('Kiro', 10, 100, 10)
-slime = Participant('Slime', 5, 20, 10)
-bee = Participant('Bee', 20, 10, 5)
+slime = Enemy_Participant('Slime', 5, 20, 10)
+bee = Enemy_Participant('Bee', 20, 10, 5)
+
+test_Participants = [kiro, slime, bee]
+#test_Participants = [Kiro, Slime, Bee]
 
 
-test_Participants = [Kiro, Slime, Bee]
+test_allies = [kiro]
+test_enemies = [slime, bee]
 
-test_allies = [Kiro]
-test_enemies = [Slime, Bee]
+#test_allies = [Kiro]
+#test_enemies = [Slime, Bee]
 
 #Readiness Stages
 #a = act
@@ -90,14 +96,16 @@ test_enemies = [Slime, Bee]
 
 global_participant_readiness = []
 
+
+
 def battle_Readiness_Init(Participants):
     """
     Creates a list of list-pairs of particpants and their readiness, with their readiness taking default values.
     """
-    party_names = [entry['name'] for entry in test_allies]
+    party_names = [entry.name for entry in test_allies]
     # for entry in test_allies:
     #     party_names.append(entry['name'])
-    enemy_names = [entry['name'] for entry in test_enemies]
+    enemy_names = [entry.name for entry in test_enemies]
     # for entry in test_enemies:
     #     enemy_names.append(entry['name'])
 
@@ -111,10 +119,54 @@ def battle_Readiness_Init(Participants):
 
 
 
+
+"""
+def battle_Readiness_Init(Participants):
+"""
+#    Creates a list of list-pairs of particpants and their readiness, with their readiness taking default values.
+"""
+    party_names = [entry['name'] for entry in test_allies]
+    # for entry in test_allies:
+    #     party_names.append(entry['name'])
+    enemy_names = [entry['name'] for entry in test_enemies]
+    # for entry in test_enemies:
+    #     enemy_names.append(entry['name'])
+
+    print "Party:", party_names  # Need to expand this latter
+    print "Enemies:", enemy_names
+    for entry in Participants:
+        global_participant_readiness.append([entry, [1000, 'b']])
+    return global_participant_readiness
+"""
+
+
+
+
 def finish_list_2nd_element(p):
     return p[1]
 
+
+
 def battle_Orderer(Participants_Readiness):
+    """
+    I imagine participants to be a list of participants where participants are dictionaries with relevant stats
+    Participants_Readiness would be a global variable which lists list-pairs of how close to ready each participant is (float down to 0) and whether that character is acting (and can be interrupted) or is just waiting)
+    """
+    finish_list = []
+    #The current code does not factor in participants waiting at ready.
+    for participant in Participants_Readiness:
+        finish_list.append([participant[0].name, participant[1][0]/participant[0].speed, participant[1][1]])
+    finish_list.sort(key=finish_list_2nd_element)
+    order = []
+    for entry in finish_list:
+        order.append(entry[0])
+    print 'Turn Order:', order
+    status_screen()
+    return finish_list
+
+
+
+def battle_Orderer_Old(Participants_Readiness):
     """
     I imagine participants to be a list of participants where participants are dictionaries with relevant stats
     Participants_Readiness would be a global variable which lists list-pairs of how close to ready each participant is (float down to 0) and whether that character is acting (and can be interrupted) or is just waiting)
@@ -131,8 +183,23 @@ def battle_Orderer(Participants_Readiness):
     status_screen()
     return finish_list
 
-
 def status_screen():
+    sum_hp_blocks = []
+    names_list_maxed = []
+    HP_list_maxed =[]
+    char_max = 0
+    for entry in global_participant_readiness:
+        names_list_maxed.append(entry[0].name)
+        HP_list_maxed.append(str(entry[0].hp)+'HP')
+        if len(entry[0].name) > char_max:
+            char_max = len(entry[0].name)
+        if len(str(entry[0].hp)) > char_max:
+            char_max = len(str(entry[0].hp))
+    print string_space_adder(names_list_maxed, char_max)
+    print string_space_adder(HP_list_maxed, char_max)
+
+
+def status_screen_Old():
     sum_hp_blocks = []
     names_list_maxed = []
     HP_list_maxed =[]
@@ -359,6 +426,6 @@ def basic_attack_by_enemy(agent_name):
 
 
 battle_Readiness_Init(test_Participants)
-battle_run(test_allies, test_enemies)
+#battle_run(test_allies, test_enemies)
 
 
