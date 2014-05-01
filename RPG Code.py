@@ -17,11 +17,13 @@ class Participant:
 	"""
 	Base Class for enemy participants and party members.  Need another class which tokenizes the enemy participants.
 	"""
-	def __init__(self, name, speed=10, hp=100, atk=10):
+	def __init__(self, name, speed=10, hp=100, atk=10, readiness=1000, act_state='b'):
 		self.name = name
 		self.speed = speed
 		self.hp = hp
 		self.atk = atk
+		self.readiness = readiness
+		self.act_state = act_state
 
 
 class Ally_Participant(Participant):
@@ -72,9 +74,9 @@ class Enemy_Participant(Participant):
 
 
 
-kiro = Ally_Participant('Kiro', 10, 100, 10)
-slime = Enemy_Participant('Slime', 5, 20, 10)
-bee = Enemy_Participant('Bee', 20, 10, 5)
+kiro = Ally_Participant('Kiro', 10, 100, 10, 1000, 'b')
+slime = Enemy_Participant('Slime', 5, 20, 10, 1000, 'b')
+bee = Enemy_Participant('Bee', 20, 10, 5, 1000, 'b')
 
 test_Participants = [kiro, slime, bee]
 #test_Participants = [Kiro, Slime, Bee]
@@ -112,7 +114,7 @@ def battle_Readiness_Init(Participants):
     print "Party:", party_names  # Need to expand this latter
     print "Enemies:", enemy_names
     for entry in Participants:
-        global_participant_readiness.append([entry, [1000, 'b']])
+        global_participant_readiness.append(entry)
     return global_participant_readiness
 
 
@@ -149,13 +151,14 @@ def finish_list_2nd_element(p):
 
 def battle_Orderer(Participants_Readiness):
     """
+   	Returns a finish_list with entries of the format [name, readiness/speed, act_state]
     I imagine participants to be a list of participants where participants are dictionaries with relevant stats
     Participants_Readiness would be a global variable which lists list-pairs of how close to ready each participant is (float down to 0) and whether that character is acting (and can be interrupted) or is just waiting)
     """
     finish_list = []
     #The current code does not factor in participants waiting at ready.
     for participant in Participants_Readiness:
-        finish_list.append([participant[0].name, participant[1][0]/participant[0].speed, participant[1][1]])
+        finish_list.append([participant.name, participant.readiness/participant.speed, participant.act_state])
     finish_list.sort(key=finish_list_2nd_element)
     order = []
     for entry in finish_list:
@@ -189,12 +192,12 @@ def status_screen():
     HP_list_maxed =[]
     char_max = 0
     for entry in global_participant_readiness:
-        names_list_maxed.append(entry[0].name)
-        HP_list_maxed.append(str(entry[0].hp)+'HP')
-        if len(entry[0].name) > char_max:
-            char_max = len(entry[0].name)
-        if len(str(entry[0].hp)) > char_max:
-            char_max = len(str(entry[0].hp))
+        names_list_maxed.append(entry.name)
+        HP_list_maxed.append(str(entry.hp)+'HP')
+        if len(entry.name) > char_max:
+            char_max = len(entry.name)
+        if len(str(entry.hp)) > char_max:
+            char_max = len(str(entry.hp))
     print string_space_adder(names_list_maxed, char_max)
     print string_space_adder(HP_list_maxed, char_max)
 
@@ -250,10 +253,11 @@ def action_turn_end_clean_up(participant, backswing_recovery=1000):
     """
     #edit this code to do the first part! global_participant_readiness[0].index(participant)
     for entry in global_participant_readiness:
-        if entry[0]['name'] == participant:
-            entry[1] = [backswing_recovery, 'b']
-        if entry[1][1] == 'r':
-            entry[1][1] = 'a'
+        if entry.name == participant:
+            entry.readiness = backswing_recovery
+            entry.act_state = 'b'
+        if entry.act_state == 'r':
+            entry.act_state = 'a'
     return
 
 
@@ -274,7 +278,7 @@ def time_step():
     Advances time one step.  Add in more code for damage/healing over time eventually
     """
     for participant in global_participant_readiness:
-        participant[1][0] = participant[1][0]-participant[0]['speed']#advance participants towards being ready one step
+        participant.readiness = participant.readiness-participant.speed #advance participants towards being ready one step
     return
 
 
@@ -299,11 +303,35 @@ def battle_run(allies, enemies):
     print 'Defeat!'
 
 
-def player_turn(party_member):
+
+def battle_run_Old(allies, enemies):
+    """
+    Runs a battle until all enemies or allies are defeated.  Or will.
+    I dislike how expandable this function is.  Change it eventually.
+    """
+    while allies:
+        while enemies:
+            nexts_name = get_next_turn(battle_Orderer(global_participant_readiness))
+            if nexts_name == 'Bee':
+                action_turn_end_clean_up(bee_turn())
+            else:
+                if nexts_name == 'Kiro':
+                    action_turn_end_clean_up(player_turn('Kiro'))
+                else:
+                    if nexts_name == 'Slime':
+                        action_turn_end_clean_up(slime_turn())    
+        print 'Victory!'
+        return
+    print 'Defeat!'
+
+
+
+def player_turn(party_member_name):
     """
     Lists player action choices.
-    Returns party_member [the input].
+    Returns party_member_name [the input].
     """
+    party_member = party_member_name_to_dict_value(party_member_name)
     made_a_choice = False
     while made_a_choice == False:
         action_choice = int(raw_input('What will you do? \n 1: Attack \n 2: Wait \n'))
@@ -311,7 +339,7 @@ def player_turn(party_member):
             enemies_string = 'Whom will you attack?'
             i = 1
             for entry in test_enemies:
-                enemies_string = enemies_string+"\n "+str(i)+":"+entry['name']
+                enemies_string = enemies_string+"\n "+str(i)+":"+entry.name
                 i +=1
             enemies_string = enemies_string+"\n "+str(i)+": cancel"
             target_choice_value = int(raw_input(enemies_string + '\n'))
@@ -319,10 +347,22 @@ def player_turn(party_member):
                 made_a_choice = False
             else:
                 made_a_choice = True
-                attack_enemy(target_choice(target_choice_value), party_member)
-    return party_member
+                party_member.ally_attack_enemy(target_choice(target_choice_value))
+    return party_member.name
 
 def target_choice(target_value):
+    """
+    Takes a number and returns the target object.  For allies attacking enemies.
+    """
+    i = 1
+    for entry in test_enemies:
+        if i == target_value:
+            return entry
+        i +=1
+    print "error in target choice"
+
+
+def target_choice_old(target_value):
     """
     Takes a number and returns target's name.
     """
@@ -333,11 +373,21 @@ def target_choice(target_value):
         i +=1
     print "error in target choice"
 
+
+
 #Its stupid that I have two different functions here.  Replace with one that searches global_participant_readiness
 
 
-
 def enemy_name_to_dict_value(name):
+    """
+    takes an enemies name and returns its dict value
+    """
+    for entry in test_enemies:
+        if entry.name == name:
+            return entry
+
+
+def enemy_name_to_dict_value_old(name):
     """
     takes an enemies name and returns its dict value
     """
@@ -350,9 +400,17 @@ def party_member_name_to_dict_value(name):
     takes a party member's name and returns its dict value
     """
     for entry in test_allies:
-        if entry['name'] == name:
+        if entry.name == name:
             return entry
 
+
+def party_member_name_to_dict_value_old(name):
+    """
+    takes a party member's name and returns its dict value
+    """
+    for entry in test_allies:
+        if entry['name'] == name:
+            return entry
 
 #Following function needs to be modified to consider more values eventually
 def attack_enemy(target_name, agent_name=Kiro):
@@ -368,18 +426,21 @@ def attack_enemy(target_name, agent_name=Kiro):
 
 
 def enemy_is_defeated(target_name):
-    print target_name, "is defeated" 
-    for entry in global_participant_readiness:
-        if entry[0] == enemy_name_to_dict_value(target_name):
-            global_participant_readiness.remove(entry)
-    test_enemies.remove(enemy_name_to_dict_value(target_name))
+	"""
+	takes an enemy_name and removes it from global_participant_readiness and test_enemies.
+	"""
+	print target_name, "is defeated"
+	for entry in global_participant_readiness:
+		if entry.name == enemy_name_to_dict_value(target_name).name:
+			global_participant_readiness.remove(entry)
+	test_enemies.remove(enemy_name_to_dict_value(target_name))
 
 
 def party_member_is_defeated(target_name):
     """
     Doesn't currently allow for coding
     """
-    print target_name, "is downed" 
+    print target_name, "is downed - Game Over!" 
     for entry in global_participant_readiness:
         if entry[0] == party_member_name_to_dict_value(target_name):
             global_participant_readiness.remove(entry)
@@ -406,11 +467,30 @@ def bee_turn():
     Bee does something.
     Returns the Bee's name
     """
+    target_ally = test_allies[random.randint(0,len(test_allies)-1)]
+    bee.enemy_attack_ally(target_ally)
+    return bee.name
+
+
+def bee_turn_old():
+    """
+    Bee does something.
+    Returns the Bee's name
+    """
     basic_attack_by_enemy('Bee')
     return Bee['name']
 
-
 def slime_turn():
+    """
+    Slime does something.
+    Returns the slime's name
+    """
+    target_ally = test_allies[random.randint(0,len(test_allies)-1)]
+    slime.enemy_attack_ally(target_ally)
+    return slime.name
+
+
+def slime_turn_old():
     """
     Slime does something.
     Returns the slime's name
@@ -419,13 +499,12 @@ def slime_turn():
     return Slime['name']
 
 
-
 def basic_attack_by_enemy(agent_name):
     target_ally = test_allies[random.randint(0,len(test_allies)-1)]
     attack_ally(target_ally, agent_name)
 
 
 battle_Readiness_Init(test_Participants)
-#battle_run(test_allies, test_enemies)
+battle_run(test_allies, test_enemies)
 
 
