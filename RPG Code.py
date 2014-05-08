@@ -287,20 +287,25 @@ def battle_run(allies, enemies):
     Runs a battle until all enemies or allies are defeated.  Or will.
     I dislike how expandable this function is.  Change it eventually.
     """
-    while allies:
-        while enemies:
-            nexts_name = get_next_turn(battle_Orderer(global_participant_readiness))
-            if nexts_name == 'Bee':
-                action_turn_end_clean_up(bee_turn())
+#    while allies:
+    while enemies and allies:
+        nexts_name = get_next_turn(battle_Orderer(global_participant_readiness))
+        if nexts_name == 'Bee':
+            action_turn_end_clean_up(bee_turn())
+        else:
+            if nexts_name == 'Kiro':
+                action_turn_end_clean_up(player_turn('Kiro'))
             else:
-                if nexts_name == 'Kiro':
-                    action_turn_end_clean_up(player_turn('Kiro'))
-                else:
-                    if nexts_name == 'Slime':
-                        action_turn_end_clean_up(slime_turn())    
-        print 'Victory!'
+                if nexts_name == 'Slime':
+                    action_turn_end_clean_up(slime_turn())
+    #else
+    if not enemies:    
+    	print 'Victory!'
+    	return
+    else:
+        print 'Defeat!'
         return
-    print 'Defeat!'
+
 
 
 
@@ -348,6 +353,9 @@ def player_turn(party_member_name):
             else:
                 made_a_choice = True
                 party_member.ally_attack_enemy(target_choice(target_choice_value))
+        if action_choice ==2:
+            party_member.act_state = 'r'
+            made_a_choice = True
     return party_member.name
 
 def target_choice(target_value):
@@ -442,9 +450,9 @@ def party_member_is_defeated(target_name):
     """
     print target_name, "is downed - Game Over!" 
     for entry in global_participant_readiness:
-        if entry[0] == party_member_name_to_dict_value(target_name):
+        if entry.name == party_member_name_to_dict_value(target_name).name:
             global_participant_readiness.remove(entry)
-    test_enemies.remove(enemy_name_to_dict_value(target_name))
+    test_allies.remove(party_member_name_to_dict_value(target_name))
 
 #Needs finishing!!!
 def attack_ally(target_name, agent_name):
